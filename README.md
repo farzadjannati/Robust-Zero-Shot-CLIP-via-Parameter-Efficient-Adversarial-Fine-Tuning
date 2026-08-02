@@ -49,6 +49,17 @@ Large-scale vision-language models such as CLIP achieve remarkable zero-shot cla
 
 Zero-shot classification with CLIP relies on aligning image embeddings with natural-language class descriptions in a shared multimodal space. While this alignment generalizes remarkably well to unseen distributions, it is extremely brittle under adversarial perturbations: a perturbation bounded by an `L∞` budget of `8/255` is sufficient to drive zero-shot accuracy to near-random levels.
 
+### Visualizing the Vulnerability (PGD Attack)
+
+<div align="center">
+  <img src="assets/pgd_attack.gif" alt="Step-by-step PGD attack fooling CLIP's zero-shot classifier" width="750"/>
+  <br>
+  <p><em>
+    A 7-step PGD attack (&epsilon; = 8/255) against CLIP ViT-B/32. The perturbation stays visually imperceptible, yet zero-shot accuracy collapses from <strong>87.83%</strong> to <strong>0.23%</strong>.
+  </em></p>
+</div>
+<br>
+
 This project investigates whether **robustness can be injected into a frozen vision-language model without full fine-tuning**, using lightweight adapters and text-guided objectives.
 
 The pipeline covers the full experimental cycle:
