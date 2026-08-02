@@ -1,12 +1,12 @@
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,50:4338ca,100:06b6d4&height=220&section=header&text=Robust%20Zero-Shot%20CLIP&fontSize=36&fontColor=ffffff&fontAlignY=50&animation=fadeIn" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f172a,50:9f1239,100:e11d48&height=220&section=header&text=Robust%20Zero-Shot%20CLIP&fontSize=38&fontColor=ffffff&fontAlignY=50&animation=fadeIn" />
 </div>
 
 ---
 
 # Robust Zero-Shot Classification via Parameter-Efficient Adversarial Fine-Tuning of CLIP
 
-The project demonstrates how parameter-efficient fine-tuning methods — LoRA, Text-guided Contrastive Adversarial training (TeCoA), and Visual Prompt Tuning — can restore the adversarial robustness of large vision-language models under white-box PGD attacks, while preserving and even improving their clean zero-shot classification performance.
+> A comprehensive framework restoring the adversarial robustness of large vision-language models under white-box PGD attacks via parameter-efficient fine-tuning (LoRA), Text-guided Contrastive Adversarial Training (TeCoA), and Visual Prompt Tuning.
 
 <div align="left">
 
@@ -42,13 +42,8 @@ Large-scale vision-language models such as CLIP achieve remarkable zero-shot cla
 5. [Experimental Setup](#experimental-setup) — Data, Models, and Hyperparameters
 6. [Results and Analysis](#results-and-analysis) — Clean vs. Adversarial Trade-off
 7. [Project Structure](#project-structure) — Repository Organization
-8. [Installation](#installation) — Environment and Dependencies
-9. [Usage](#usage) — Reproducing the Experiments
-10. [Tools and Technologies](#tools-and-technologies) — Frameworks and Libraries
-11. [Key Findings](#key-findings) — Empirical Takeaways
-12. [License](#license)
-13. [Author](#author)
-14. [Support](#support)
+8. [Usage and Installation](#usage-and-installation)
+9. [Authors](#authors)
 
 # Overview
 
@@ -313,94 +308,26 @@ Robust-Zero-Shot-CLIP-via-Parameter-Efficient-Adversarial-Fine-Tuning
 
 ---
 
-# Installation
-
-## Clone Repository
+# Usage and Installation
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/farzadjannati/Robust-Zero-Shot-CLIP-via-Parameter-Efficient-Adversarial-Fine-Tuning.git
-
 cd Robust-Zero-Shot-CLIP-via-Parameter-Efficient-Adversarial-Fine-Tuning
-```
 
-## Create Environment
-
-```bash
+# 2. Create and activate virtual environment
 conda create -n robust-clip python=3.10
-
 conda activate robust-clip
-```
 
-## Install Dependencies
-
-```bash
+# 3. Install required packages
 pip install -r requirements.txt
+# Core deps: torch, torchvision, transformers, peft, torchattacks
 ```
 
-## Core Requirements
-
-```bash
-pip install torch torchvision transformers peft torchattacks
-pip install numpy pandas matplotlib tqdm pillow
-```
+### Reproducibility
+To reproduce the results, execute the cells sequentially in `robust_clip_finetuning.ipynb`. A CUDA-enabled GPU is strongly recommended (e.g., Google Colab T4). All modules use deterministic random seeds (`42`).
 
 ---
-
-# Usage
-
-## Run on Google Colab
-
-Open the notebook with a GPU runtime (T4 or higher is recommended) and execute the sections sequentially:
-
-```text
-Section 1 → Data Preparation and Preprocessing
-Section 2 → Loading Pre-trained CLIP and ResNet-20
-Section 3 → Zero-Shot Evaluation and PGD Attack Generation
-Section 4 → LoRA-based Adversarial Fine-Tuning
-Section 5 → TeCoA Training and Evaluation
-Section 6 → Comprehensive Method Comparison
-Section 7 → Visual Prompt Tuning with TeCoA (Bonus)
-```
-
-## Reproducibility
-
-All experiments are seeded for deterministic dataset splitting and attack initialization:
-
-```python
-torch.manual_seed(42)
-torch.cuda.manual_seed(42)
-np.random.seed(42)
-random.seed(42)
-```
-
----
-
-# Tools and Technologies
-
-| Component | Purpose |
-| -------------------- | ------------------------------------------- |
-| PyTorch | Model training, attacks, and evaluation |
-| CLIP ViT-B/32 | Multimodal backbone for zero-shot inference |
-| HuggingFace Transformers | Pre-trained model and processor loading |
-| PEFT (LoRA) | Parameter-efficient adapter injection |
-| TorchAttacks | Reference PGD attack implementation |
-| ResNet-20 (CIFAR-10) | Surrogate model for transfer attacks |
-| Torchvision | Dataset handling and preprocessing |
-| Matplotlib / Pandas | Visualization and result tabulation |
-| Mixed Precision (AMP) | Memory-efficient adversarial training |
-
----
-
-# Key Findings
-
-* **Zero-shot robustness is not free:** large-scale multimodal pre-training provides no meaningful defense against gradient-based attacks.
-* **Robustness can be modular:** injecting robustness into a small set of low-rank adapters recovers the majority of lost accuracy without touching the frozen backbone.
-* **Language supervision matters:** anchoring adversarial image embeddings to frozen text embeddings (TeCoA) yields a better clean-robust trade-off than purely visual adversarial training.
-* **Attacks transfer across architectures:** perturbations optimized on a small CNN still degrade a ViT-based multimodal encoder, highlighting a practical black-box threat.
-* **Prompt-level robustness is viable:** Visual Prompt Tuning offers an even lighter alternative for robustifying frozen vision-language models.
-
----
-
 # License
 
 This project is licensed under the MIT License.
