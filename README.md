@@ -31,27 +31,26 @@ Large-scale vision-language models such as CLIP achieve remarkable zero-shot cla
 
 ## Table of Contents
 
-1. [Overview](#-overview) — Motivation and Problem Definition
-2. [Key Features](#-key-features) — Core Contributions
-3. [System Architecture](#system-architecture) — Layered Robust Adaptation Pipeline
-4. [Adversarial Training Workflow](#adversarial-training-workflow) — From Attack Generation to Robust Adaptation
-5. [Methodology](#-methodology) — LoRA, TeCoA, and Visual Prompt Tuning
-   - 5.1 [Threat Model and PGD Attack](#51-threat-model-and-pgd-attack)
-   - 5.2 [Parameter-Efficient Adaptation with LoRA](#52-parameter-efficient-adaptation-with-lora)
-   - 5.3 [Text-Guided Contrastive Adversarial Training (TeCoA)](#53-text-guided-contrastive-adversarial-training-tecoa)
-   - 5.4 [Visual Prompt Tuning (Bonus)](#54-visual-prompt-tuning-bonus)
-6. [Experimental Setup](#-experimental-setup) — Data, Models, and Hyperparameters
-7. [Results and Analysis](#-results-and-analysis) — Clean vs. Adversarial Trade-off
-8. [Project Structure](#-project-structure) — Repository Organization
-9. [Installation](#-installation) — Environment and Dependencies
-10. [Usage](#-usage) — Reproducing the Experiments
-11. [Tools and Technologies](#tools-and-technologies) — Frameworks and Libraries
-12. [Key Findings](#-key-findings) — Empirical Takeaways
-13. [License](#license)
-14. [Author](#author)
-15. [Support](#-support)
+1. [Overview](#overview) — Motivation and Problem Definition
+2. [System Architecture](#system-architecture) — Layered Robust Adaptation Pipeline
+3. [Adversarial Training Workflow](#adversarial-training-workflow) — From Attack Generation to Robust Adaptation
+4. [Methodology](#methodology) — LoRA, TeCoA, and Visual Prompt Tuning
+   - 4.1 [Threat Model and PGD Attack](#41-threat-model-and-pgd-attack)
+   - 4.2 [Parameter-Efficient Adaptation with LoRA](#42-parameter-efficient-adaptation-with-lora)
+   - 4.3 [Text-Guided Contrastive Adversarial Training (TeCoA)](#43-text-guided-contrastive-adversarial-training-tecoa)
+   - 4.4 [Visual Prompt Tuning (Bonus)](#44-visual-prompt-tuning-bonus)
+5. [Experimental Setup](#experimental-setup) — Data, Models, and Hyperparameters
+6. [Results and Analysis](#results-and-analysis) — Clean vs. Adversarial Trade-off
+7. [Project Structure](#project-structure) — Repository Organization
+8. [Installation](#installation) — Environment and Dependencies
+9. [Usage](#usage) — Reproducing the Experiments
+10. [Tools and Technologies](#tools-and-technologies) — Frameworks and Libraries
+11. [Key Findings](#key-findings) — Empirical Takeaways
+12. [License](#license)
+13. [Author](#author)
+14. [Support](#support)
 
-# 📌 Overview
+# Overview
 
 Zero-shot classification with CLIP relies on aligning image embeddings with natural-language class descriptions in a shared multimodal space. While this alignment generalizes remarkably well to unseen distributions, it is extremely brittle under adversarial perturbations: a perturbation bounded by an `L∞` budget of `8/255` is sufficient to drive zero-shot accuracy to near-random levels.
 
@@ -69,22 +68,6 @@ The pipeline covers the full experimental cycle:
 
 ---
 
-# 🎯 Key Features
-
-* Zero-shot CLIP evaluation pipeline with prompt-based text embeddings
-* Custom PGD (`L∞`) attack implementation for multimodal similarity objectives
-* Attack transferability analysis from a CNN classifier (ResNet-20) to a ViT-based CLIP encoder
-* Parameter-efficient adversarial fine-tuning with LoRA adapters on attention projections
-* TeCoA implementation with frozen text embeddings as robust semantic anchors
-* Visual Prompt Tuning (VPT) integrated with TeCoA for prompt-level robustness
-* Feature-space projection layer for cross-dimensional image-text alignment
-* Mixed-precision training with `autocast` and `GradScaler` for efficient adversarial training
-* Adversarial perturbation statistics: attack success rate, `L∞` / `L2` norms, and confidence drop
-* Qualitative visualization of clean images, adversarial images, and perturbation maps
-* Comprehensive multi-method comparison including robustness gap and robustness efficiency metrics
-
----
-
 # System Architecture
 
 The system follows a layered architecture in which a frozen vision-language backbone is adapted through lightweight trainable modules, while an adversarial attack generator continuously produces worst-case inputs during training. Class-level text embeddings act as fixed semantic anchors, guiding the image encoder toward representations that remain aligned under perturbation.
@@ -94,7 +77,7 @@ flowchart TB
 
 subgraph Data Layer
     D[CIFAR-10 Dataset]
-    PR[CLIP Preprocessing: Resize / CenterCrop / Normalize]
+    PR["CLIP Preprocessing: Resize / CenterCrop / Normalize"]
 end
 
 subgraph Attack Layer
@@ -103,7 +86,7 @@ subgraph Attack Layer
 end
 
 subgraph Frozen Backbone
-    VE[CLIP Vision Encoder ViT-B/32]
+    VE["CLIP Vision Encoder ViT-B/32"]
     TE[CLIP Text Encoder]
 end
 
@@ -168,13 +151,13 @@ flowchart TD
 
 A[Clean CIFAR-10 Batch]
 
-A --> B[Frozen Text Encoder: "a photo of a {class}"]
+A --> B["Frozen Text Encoder with Class Prompt Template"]
 
 A --> C[PGD Attack Generation]
 
-C --> D[Adversarial Batch: eps = 8/255]
+C --> D["Adversarial Batch: eps = 8/255"]
 
-D --> E[CLIP Vision Encoder with LoRA / VPT]
+D --> E["CLIP Vision Encoder with LoRA / VPT"]
 
 B --> F[Normalized Text Embeddings]
 
@@ -205,9 +188,9 @@ N --> O
 
 ---
 
-# 🧪 Methodology
+# Methodology
 
-## 5.1 Threat Model and PGD Attack
+## 4.1 Threat Model and PGD Attack
 
 Adversarial examples are generated under an `L∞` threat model with a perturbation budget of `ε = 8/255`, a step size of `α = 2/255`, and `7` iterative steps, initialized with uniform random noise inside the epsilon ball. Unlike conventional classifiers, the attack objective is defined over the **multimodal similarity matrix** between normalized image embeddings and frozen text embeddings:
 
@@ -224,7 +207,7 @@ Two attack settings are evaluated:
 * **White-box PGD** directly against the CLIP image encoder
 * **Transfer attack** crafted on a CIFAR-10 ResNet-20 and evaluated on CLIP
 
-## 5.2 Parameter-Efficient Adaptation with LoRA
+## 4.2 Parameter-Efficient Adaptation with LoRA
 
 Instead of updating all parameters of the ViT-B/32 vision tower, low-rank adapters are injected into the attention projection matrices (`q_proj`, `k_proj`, `v_proj`, `out_proj`). All non-LoRA parameters are explicitly frozen, so only the adapter weights receive gradients during adversarial training:
 
@@ -236,7 +219,7 @@ for name, param in lora_vision_model.named_parameters():
 
 Because the LoRA-wrapped vision tower outputs `768`-dimensional pooled features while CLIP text embeddings live in a `512`-dimensional space, a lightweight linear projection layer bridges the two representation spaces before similarity computation.
 
-## 5.3 Text-Guided Contrastive Adversarial Training (TeCoA)
+## 4.3 Text-Guided Contrastive Adversarial Training (TeCoA)
 
 TeCoA replaces the standard adversarial cross-entropy objective with a **contrastive alignment loss** between adversarial image embeddings and frozen class-level text embeddings. The text encoder remains untouched, which means class semantics act as stable anchors that cannot be corrupted by adversarial optimization.
 
@@ -247,13 +230,13 @@ Conceptually, the training objective encourages:
 
 This text-guided supervision is the key reason TeCoA generalizes better than standard adversarial training: robustness is learned in the **shared multimodal space**, not in a task-specific classification head.
 
-## 5.4 Visual Prompt Tuning (Bonus)
+## 4.4 Visual Prompt Tuning (Bonus)
 
 As a bonus study, robustness is also learned through **Visual Prompt Tuning**, where a small set of learnable prompt parameters is prepended to the visual token sequence while the entire backbone stays frozen. Combining VPT with the TeCoA objective yields an even more parameter-efficient robustification strategy, providing a direct comparison between *adapter-based* and *prompt-based* robust adaptation.
 
 ---
 
-# ⚙️ Experimental Setup
+# Experimental Setup
 
 | Component | Configuration |
 | ----------------------- | -------------------------------------------- |
@@ -274,7 +257,7 @@ As a bonus study, robustness is also learned through **Visual Prompt Tuning**, w
 
 ---
 
-# 📊 Results and Analysis
+# Results and Analysis
 
 ### Method Comparison on CIFAR-10 Test Set
 
@@ -301,12 +284,12 @@ As a bonus study, robustness is also learned through **Visual Prompt Tuning**, w
 
 ---
 
-# 📁 Project Structure
+# Project Structure
 
 ```text
 Robust-Zero-Shot-CLIP-via-Parameter-Efficient-Adversarial-Fine-Tuning
 │
-├── robust_zeroshot_clip_lora_tecoa_adversarial_finetuning.ipynb
+├── robust_clip_adversarial_finetuning.ipynb
 │
 ├── data/
 │   └── cifar-10-batches-py/
@@ -330,7 +313,7 @@ Robust-Zero-Shot-CLIP-via-Parameter-Efficient-Adversarial-Fine-Tuning
 
 ---
 
-# 🚀 Installation
+# Installation
 
 ## Clone Repository
 
@@ -363,7 +346,7 @@ pip install numpy pandas matplotlib tqdm pillow
 
 ---
 
-# ▶️ Usage
+# Usage
 
 ## Run on Google Colab
 
@@ -408,7 +391,7 @@ random.seed(42)
 
 ---
 
-# 🔍 Key Findings
+# Key Findings
 
 * **Zero-shot robustness is not free:** large-scale multimodal pre-training provides no meaningful defense against gradient-based attacks.
 * **Robustness can be modular:** injecting robustness into a small set of low-rank adapters recovers the majority of lost accuracy without touching the frozen backbone.
@@ -436,12 +419,12 @@ Research Assistant @ Social Networks Lab
 
 ---
 
-# ⭐ Support
+# Support
 
 If you find this project useful, consider giving it a star ⭐
 
 ---
 
 <p align="center">
-  Built with ❤️ using PyTorch, CLIP, PEFT (LoRA), TeCoA, and TorchAttacks
+  Built with ❤️ using PyTorch, PEFT, and TorchAttacks
 </p>
