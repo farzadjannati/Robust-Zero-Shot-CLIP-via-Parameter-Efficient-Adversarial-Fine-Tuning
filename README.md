@@ -284,25 +284,10 @@ As a bonus study, robustness is also learned through **Visual Prompt Tuning**, w
 ```text
 Robust-Zero-Shot-CLIP-via-Parameter-Efficient-Adversarial-Fine-Tuning
 │
-├── robust_clip_adversarial_finetuning.ipynb
-│
-├── data/
-│   └── cifar-10-batches-py/
-│
-├── figures/
-│   ├── dataset_samples.png
-│   ├── class_distribution.png
-│   ├── adversarial_examples.png
-│   ├── training_curves.png
-│   └── method_comparison.png
-│
-├── results/
-│   ├── method_comparison.csv
-│   ├── attack_statistics.json
-│   └── training_history.json
-│
-├── requirements.txt
-│
+├── robust_clip_finetuning.ipynb     # Main implementation notebook
+├── data/                            # CIFAR-10 datasets
+├── assets/                          # Visualization outputs
+├── requirements.txt                 # Dependencies
 └── README.md
 ```
 
